@@ -85,5 +85,50 @@ namespace AsynchronousProgramming.Controllers
                 return RedirectToAction("List");
             }
         }
+
+        //GET: https://localhost:5001/Category/Edit/{id}
+        public async Task<IActionResult> Edit(int id)
+        {
+            Category category = await _categoryRepository.GetById(id);
+            if (category is null) return RedirectToAction("List");
+            UpdateCategoryDTO model = _mapper.Map<UpdateCategoryDTO>(category);
+
+            //UpdateCategoryDTO model2 = new UpdateCategoryDTO
+            //{ bir üst satırda kullanılan AutoMapper kütüphanesi sayesinde mapping işlemini tanıtıp, açık açık bu işlemleri yapmak zorunda kalmayız.
+            //    Id = category.Id,
+            //    Name = category.Name,
+            //    Slug = category.Slug
+            //}
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(UpdateCategoryDTO model)
+        {
+            if (ModelState.IsValid)
+            {
+                var slug = await _categoryRepository.GetByDefault(x => x.Slug == model.Slug);
+
+                if(slug != null)
+                {
+                    ModelState.AddModelError(string.Empty, $"{model.Name} already exists..!");
+                    TempData["Warning"] = "The category already exists..!";
+                    return View(model);
+                }
+                else
+                {
+                    Category category = _mapper.Map<Category>(model);
+                    await _categoryRepository.Update(category);
+                    TempData["Success"] = "The category has been updated..!";
+                    return RedirectToAction("List");
+                }
+            }
+            else
+            {
+                TempData["Error"] = "The category hasn't been updated..!";
+                return View(model);
+            }
+        }
     }
 }
