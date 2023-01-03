@@ -12,6 +12,14 @@ namespace AsynchronousProgramming.Models.AutoMapper
             CreateMap<Category, CreateCategoryDTO>().ReverseMap();
             CreateMap<Category, UpdateCategoryDTO>().ReverseMap();
             CreateMap<Category, CategoryVM>().ReverseMap();
+
+
+            CreateMap<Page, CreatePageDTO>().ReverseMap();
+            CreateMap<Page, UpdatePageDTO>().ReverseMap();
+            CreateMap<Page, PageVM>().ReverseMap();
+
+
+
         }
     }
 }

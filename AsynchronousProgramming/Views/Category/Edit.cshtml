@@ -12,6 +12,7 @@
             <form asp-action="Edit">
                 <div class="card-body">
                     <div class="form-group">
+                        <input type="hidden" asp-for="@Model.Id" />
                         @*<span asp-validation-summary="ModelOnly" class="text-danger"></span>*@
                         <label asp-for="Name">Title</label>
                         <input asp-for="Name" class="form-control" placeholder="Category Name" value="@Model.Name" />
