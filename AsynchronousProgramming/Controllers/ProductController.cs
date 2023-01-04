@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -90,6 +91,90 @@ namespace AsynchronousProgramming.Controllers
                 join: x => x.Include(x => x.Category)); //eager loading
 
             return View(products);
+        }
+        public async Task<IActionResult> Index2() => View(await _proRepository.GetByDefaults(p => p.Status != Status.Passive));
+        public async Task<IActionResult> ProductByCategory(string categorySlug)
+        {
+            Category category = await _catRepository.GetByDefault(x => x.Slug == categorySlug);
+
+            if (category == null) return RedirectToAction("List");
+
+            ViewBag.CategoryName = category.Name;
+            ViewBag.CategorySlug = category.Slug;
+
+            List<Product> products = await _proRepository.GetByDefaults(x => x.CategoryId == category.Id);
+
+            return View(products);
+        }
+        public async Task<IActionResult> Remove(int id)
+        {
+            Product product = await _proRepository.GetById(id);
+
+            if(product != null)
+            {
+                product.DeleteDate = DateTime.Now;
+                product.Status = Status.Passive;
+                await _proRepository.Delete(product);
+                TempData["Success"] = "The product has been removed";
+                return RedirectToAction("List");
+            }
+            else
+            {
+                TempData["Error"] = "The product has not been removed..!";
+                return RedirectToAction("List");
+            }
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            Product product = await _proRepository.GetById(id);
+            UpdateProductDTO model = new UpdateProductDTO
+            {
+                Categories = await _catRepository.GetByDefaults(x => x.Status != Status.Passive),
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                UnitPrice = product.UnitPrice,
+                Image = product.Image
+            };
+            return View(model);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(UpdateProductDTO model)
+        {
+            if(ModelState.IsValid)
+            {
+                string imageName = "noimage.png";
+                if (model.UploadImage != null)
+                {
+                    string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "media/products");
+                    //eğer model'in image'i noimage.png değil ise, o zaman kayıt sırasında resim ekleme başarılı olmuş demektir. Ben şu anda bunu update etmek istiyorsam(resmi) eski resmi silmeliyim çünkü gereksiz büyük boyutlarda dosyaları proje içeriisnde barındırmanın lüzümu yoktur.
+                    if(!string.Equals(model.Image, "noimage.png"))
+                    {
+                        //daha öncesinde resim yüklenebilmiş.
+                        string oldPath = Path.Combine(uploadDir, model.Image);
+                        if(System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                    }
+                    imageName = $"{Guid.NewGuid()}_{model.UploadImage.FileName}";
+                    string filePath = Path.Combine(uploadDir, imageName);
+                    FileStream fileStream = new FileStream(filePath, FileMode.Create);
+                    await model.UploadImage.CopyToAsync(fileStream);
+                    fileStream.Close();
+                }
+
+                Product product = _mapper.Map<Product>(model);
+                product.Image = imageName;
+                await _proRepository.Update(product);
+                TempData["Success"] = "The product has been edited..!";
+                return RedirectToAction("List");
+            }
+            else
+            {
+                TempData["Error"] = "The product has been edited..!";
+                return View(model);
+            }
         }
     }
 }

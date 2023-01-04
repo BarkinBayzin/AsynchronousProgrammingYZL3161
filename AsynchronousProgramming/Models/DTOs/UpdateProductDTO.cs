@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AsynchronousProgramming.Models.Entities.Concrete;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -19,6 +21,8 @@ namespace AsynchronousProgramming.Models.DTOs
 
         [Required(ErrorMessage = "Must to choose category..!")]
         public int CategoryId { get; set; }
+
+        public List<Category> Categories { get; set; }
 
         public string Slug => Name.ToLower().Replace(' ', '-');
     }

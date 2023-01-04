@@ -74,6 +74,12 @@ namespace AsynchronousProgramming
                     "{slug?}",
                     defaults: new { controller = "Page", action = "Page" });
 
+                //endpoints.MapControllerRoute(
+                //    "product",
+                //    "product/{categorySlug}",
+                //    defaults: new { controller = "Product", action = "ProductByCategory" });
+
+
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
